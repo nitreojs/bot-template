@@ -25,6 +25,6 @@
     "@starkow/logger": "^2.3.1",
     "dotenv": "^16.3.1",
     "env-var": "^7.4.1",
-    "puregram": "^2.20.0"
+    "puregram": "^2.26.2"
   }
 }
