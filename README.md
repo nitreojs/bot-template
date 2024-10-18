@@ -13,3 +13,7 @@ git remote remove origin
 ```
 
 don't forget to rename `.env.example` to `.env`!
+
+```sh
+mv .env.example .env
+```
