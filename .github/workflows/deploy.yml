@@ -1,0 +1,122 @@
+name: Deploy
+
+env:
+  PROJECT_NAME: bot-template                # pm2 name
+  PROJECT_PATH: /home/username/bot-template # project folder path
+  MAIN_EXE: dist/bot.js                     # pm2 executable to start
+
+on:
+  push:
+    branches: [ lord ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get commits
+        id: commits
+        run: |
+          COMMITS=""
+          for commit in $(git rev-list --reverse ${{ github.event.after }} ^${{ github.event.before }}); do
+            SHA=$commit
+            MESSAGE=$(git log -1 --format=%s $commit)
+            AUTHOR=$(git log -1 --format=%an $commit)
+            SHORT_SHA=${SHA:0:7}
+            COMMITS="${COMMITS}[${SHORT_SHA}](https://github.com/${{ github.repository }}/commit/$SHA): ${MESSAGE} by _${AUTHOR}_\n"
+          done
+
+          echo "list=${COMMITS}" >> $GITHUB_OUTPUT
+
+      - name: Send deploy starting 
+        id: telegram
+        run: |
+          response=$(curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d @- << EOF
+          {
+            "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
+            "parse_mode": "markdown",
+            "text": "🔨 Deploying to [${{ github.repository }}](https://github.com/${{ github.repository }})@${{ github.ref_name }}\n${{ steps.commits.outputs.list }}",
+            "reply_markup": {
+              "inline_keyboard": [
+                [
+                  {
+                    "text": "📝 Commits",
+                    "url": "https://github.com/${{ github.repository }}/compare/${{ github.event.before }}..${{ github.event.after }}"
+                  },
+                  {
+                    "text": "🔄 Action",
+                    "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                ]
+              ]
+            }
+          }
+          EOF
+          )
+          echo "message_id=$(echo $response | jq .result.message_id)" >> $GITHUB_OUTPUT
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            export PATH="/home/alice/.local/share/fnm:$PATH"
+            eval "`fnm env`"
+
+            mkdir -p ${{ env.PROJECT_PATH }}
+            cd ${{ env.PROJECT_PATH }}
+
+            if [ ! -d "${{ env.PROJECT_PATH }}/.git" ]; then
+              rm -rf ${{ env.PROJECT_PATH }}
+
+              mkdir -p ${{ env.PROJECT_PATH }}
+              cd ${{ env.PROJECT_PATH }}
+
+              git clone https://oauth2:${{ secrets.GH_PAT }}@github.com/${{ github.repository }} .
+            else
+              cd ${{ env.PROJECT_PATH }}
+            fi
+
+            cat > .env << EOL
+            TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+            EOL
+
+            git config --global credential.helper store
+            echo "https://oauth2:${{ secrets.GH_PAT }}@github.com" > ~/.git-credentials
+
+            git pull
+
+            yarn
+            yarn build
+            pm2 restart ${{ env.PROJECT_NAME }} || pm2 start --name ${{ env.PROJECT_NAME }} ${{ env.MAIN_EXE }}
+      
+      - name: Success
+        if: success()
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
+              "parse_mode": "markdown",
+              "text": "✅ Deploy successful!",
+              "reply_to_message_id": ${{ steps.telegram.outputs.message_id }}
+            }'
+      
+      - name: Failure
+        if: failure()
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
+              "parse_mode": "markdown",
+              "text": "❌ Deploy failed!",
+              "reply_to_message_id": ${{ steps.telegram.outputs.message_id }}
+            }'
