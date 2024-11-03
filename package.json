@@ -15,7 +15,6 @@
     "eslint-import-resolver-typescript": "^3.6.3",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-n": "^16.2.0",
-    "eslint-plugin-perfectionist": "^2.3.0",
     "eslint-plugin-promise": "^6.1.1",
     "ts-node": "^10.9.1",
     "tsc-alias": "^1.8.8",
