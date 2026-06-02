@@ -1,16 +1,20 @@
 import { Color, Logger } from '@starkow/logger'
-import { Telegram } from 'puregram'
 
-import { Env } from './env'
+import commands from '@/commands'
+import { telegram } from '@/shared/telegram'
 
-const telegram = Telegram.fromToken(Env.TOKEN)
+telegram.onMessage((context) => {
+  const text = context.text ?? ''
 
-telegram.updates.on('message', (context) => {
-  return context.send('Hello, world!')
+  for (const command of commands) {
+    if (command.test(text)) {
+      return command.handler(context)
+    }
+  }
 })
 
 const main = async () => {
-  await telegram.updates.startPolling()
+  await telegram.startPolling()
 
   Logger.create(`@${telegram.bot.username}`)('started')
 }

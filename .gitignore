@@ -130,3 +130,6 @@ dist
 .pnp.*
 
 .env
+
+# project state doc (local only)
+PROJECT.md

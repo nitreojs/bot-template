@@ -2,8 +2,7 @@
   "root": true,
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "project": "./tsconfig.json",
-    "tsconfigRootDir": "./"
+    "project": "./tsconfig.json"
   },
   "extends": [
     "standard",
@@ -23,6 +22,8 @@
   "rules": {
     "@typescript-eslint/no-empty-interface": "off",
     "@typescript-eslint/no-empty-function": "off",
+    "no-useless-constructor": "off",
+    "@typescript-eslint/no-useless-constructor": "error",
     "padding-line-between-statements": [
       "error",
       { "blankLine": "always", "prev": ["block-like", "break", "case", "class", "const", "continue", "default", "directive", "do", "import", "export", "expression", "for", "function", "if", "iife", "let", "multiline-block-like", "multiline-const", "multiline-expression", "multiline-let", "return", "throw", "try", "while"], "next": "*" },

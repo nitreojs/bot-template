@@ -95,7 +95,7 @@ jobs:
 
             yarn
             yarn build
-            pm2 restart ${{ env.PROJECT_NAME }} || pm2 start --name ${{ env.PROJECT_NAME }} ${{ env.MAIN_EXE }}
+            pm2 restart ${{ env.PROJECT_NAME }} || pm2 start --name ${{ env.PROJECT_NAME }} --node-args="--env-file=.env" ${{ env.MAIN_EXE }}
       
       - name: Success
         if: success()

@@ -1,12 +1,25 @@
 # bot-template
 
-telegram bot template using puregram with github actions as an auto-deployer to the server
+telegram bot template using puregram v3 (esm-only) with github actions as an auto-deployer to the server
+
+requires node 22+
 
 ## installing deps
 
 ```sh
-yarn add -D typescript ts-node tsc-alias tsconfig-paths eslint eslint-config-standard eslint-plugin-import eslint-plugin-n eslint-plugin-perfectionist eslint-plugin-promise @types/node @typescript-eslint/parser @typescript-eslint/eslint-plugin
+yarn add puregram @starkow/logger env-var
+yarn add -D typescript tsx tsc-alias eslint eslint-config-standard eslint-plugin-import eslint-plugin-n eslint-plugin-promise eslint-import-resolver-typescript @types/node @typescript-eslint/parser @typescript-eslint/eslint-plugin
 ```
+
+## scripts
+
+- `yarn dev` - run in watch mode via `tsx` (reads `.env` through node's native `--env-file`)
+
+- `yarn build` - compile with `tsc` and rewrite `@/*` aliases via `tsc-alias`
+
+- `yarn start` - run the compiled bot from `dist/`
+
+- `yarn lint` - lint with eslint
 
 ## setting up `.github/workflows`
 
