@@ -41,7 +41,26 @@ yarn add -D typescript tsx tsc-alias eslint eslint-config-standard eslint-plugin
 rm -rf .github
 ```
 
+## starting fresh
+
+don't want the template's commit history when you start your own project? nuke `.git` and re-init — every file stays in place, the history collapses to a single commit:
+
+```sh
+rm -rf .git
+git init -b lord
+git add .
+git commit -m "init"
+```
+
+`-b lord` keeps the branch name the deploy workflow triggers on. this also drops the `origin` remote, so just point it at your own repo:
+
+```sh
+git remote add origin <your-repo-url>
+```
+
 ## removing `git remote`
+
+> only need this if you kept the history (skipped *starting fresh* above) and just want to swap the remote
 
 ```sh
 git remote remove origin
